@@ -5,6 +5,9 @@ class face(object):
     def __init__(self, landmarks, frame_num):
         self.landmarks = landmarks
         self.frame_num = frame_num
+    
+    def __str__(self):
+        return str(self.frame_num)
 
     def L2Dist(self, other):
         return np.linalg.norm(self.landmarks-other.landmarks)
@@ -12,12 +15,18 @@ class face(object):
 class sustained(object):
     def __init__(self):
         self.dq = deque()
+    
+    def __str__(self):
+        res = ""
+        for i, a in enumerate(self.dq):
+            res += str(a) + " "
+        return res
 
     def getFront(self):
-        return self.dq[-1]
+        return self.dq[0]
 
     def getEnd(self):
-        return self.dq[0]
+        return self.dq[-1]
 
     def addEnd(self, new_face):
         return self.dq.append(new_face)
@@ -25,6 +34,12 @@ class sustained(object):
 class face_movements(object):
     def __init__(self):
         self.list = []
+    
+    def __str__(self):
+        res = ":"
+        for i, a in enumerate(self.list):
+            res += "[" + str(a) + "] "
+        return res
 
     def addFace(self, new_face):
         if not self.list:

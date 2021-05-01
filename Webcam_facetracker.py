@@ -116,38 +116,45 @@ class FaceTracker(object):
         cv2.destroyAllWindows()
 
     def crowdTracking_greedy(self):
-        cap = cv2.VideoCapture('sourceVideos/crowd_resized.mp4')
-        cap.set(cv2.CAP_PROP_FPS, 24)
+        cap = cv2.VideoCapture('sourceVideos/face-demographics-walking_onepersontrim_sample-videos.mp4')
+        cap.set(cv2.CAP_PROP_FPS, 30)
         
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(find_available_file(name='outputVideos/crowdwalking_output'), 
-            fourcc, 24, (640, 480))
+        fps = 10 # cap.get(cv2.CAP_PROP_FPS)
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        fourcc1 = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(find_available_file(name='outputVideos/onepersonwalking_output'), 
+            fourcc1, fps, (frame_width, frame_height))
 
         frame_num = 0
 
         trackList = face_movements()
         
+        debugFile = open("faceInfo.txt", "w")
+
         while True:
             ret, frame = cap.read()
             if ret:
                 boxes, probs, landmarks = self.mtcnn.detect(frame, landmarks = True)
 
+                debugFile.write(str(frame_num) + " " + str(not(boxes is None)) + " "+ str(trackList) + '\n')
+
                 if not(boxes is None):
-                    face_nums = []
-                    for landi in landmarks:
+                    face_nums = [0] * len(landmarks)
+                    for i, landi in enumerate(landmarks):
                         new_face = face(landmarks=landi, frame_num=frame_num)
-                        face_nums.append(trackList.addFace(new_face))
+                        face_nums[i] = trackList.addFace(new_face)
                     
                     drawframe.notate(frame, boxes, landmarks = landmarks, probs = probs, faceids=face_nums)
-
+                
+                cv2.putText(frame, str(frame_num), (50, 50), cv2.FONT_HERSHEY_DUPLEX, 0.8, (0,0,0))
                 out.write(frame)
-                # cv2.imshow('Crowd Faces', frame)
                 
                 frame_num += 1
             else:
                 break
             
-
+        debugFile.close()
         cap.release()
         out.release()
         cv2.destroyAllWindows()
