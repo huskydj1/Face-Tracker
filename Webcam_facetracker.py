@@ -8,6 +8,8 @@ from facenet_pytorch import MTCNN
 from greedymatching import face_movements
 from greedymatching import face
 
+import drawframe
+
 def find_available_file(name):
         file_name = name + '{}.mp4'
         file_num = 0
@@ -23,33 +25,10 @@ class FaceTracker(object):
         self.mtcnn = mtcnn
         self.time_elapsed_sum = 0.0
         self.time_elapsed_cnt = 0.0
-
-    def drawRect(self, frame, boxes, probs, landmarks, facenums, show_rect = True, show_prob = False, show_land = True):
-        # print(type(boxes), boxes.shape)
-        # print(type(probs), probs.shape)
-        # print(type(landmarks), landmarks.shape)
-
-        for box, prob, ld, numi in zip(boxes, np.asarray(probs), landmarks, facenums):
-            # https://docs.opencv.org/master/d6/d6e/group__imgproc__draw.html#ga5126f47f883d730f633d74f07456c576
-            
-            if show_rect:
-                cv2.rectangle(img = frame, pt1 = (box[0], box[1]), pt2 = (box[2], box[3]), 
-                    color = (0, 0, 255), thickness = 2)
-            if show_prob:
-                cv2.putText(img = frame, text = str(prob), org = (box[2], box[3]), 
-                    fontFace = cv2.FONT_HERSHEY_COMPLEX, fontScale = 1, color = (0, 0, 255), thickness = 2, lineType = cv2.LINE_AA)
-            if numi != -1:
-                cv2.putText(img = frame, text = str(numi), org = (box[2], box[3]), 
-                    fontFace = cv2.FONT_HERSHEY_COMPLEX, fontScale = 1, color = (0, 0, 255), thickness = 1, lineType = cv2.LINE_AA)
-            
-            if show_land:
-                for land_x, land_y in ld:
-                    cv2.circle(img = frame, center=(land_x, land_y), radius = 2, color = (255, 0, 0), thickness=-1)
-
-        return frame
+    
 
     def run_webcam(self):
-        cap = cv2.VideoCapture(1)
+        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
         frame_rate = 30 #LOGITECH C20 MAX FPS=30
         prev = 0
@@ -77,7 +56,7 @@ class FaceTracker(object):
                 boxes, probs, landmarks = self.mtcnn.detect(frame, landmarks = True)
                 
                 if not(boxes is None):
-                    self.drawRect(frame, boxes, probs, landmarks)
+                    drawframe.notate(frame, boxes, landmarks)
 
                 cv2.imshow('Face Detection', frame)
 
@@ -124,7 +103,7 @@ class FaceTracker(object):
                 boxes, probs, landmarks = self.mtcnn.detect(frame, landmarks = True)
 
                 if not(boxes is None):
-                    self.drawRect(frame, boxes, probs, landmarks)
+                    self.notate(frame, boxes, probs, landmarks)
 
                 out.write(frame)
                 # cv2.imshow('Crowd Faces', frame)
@@ -159,7 +138,7 @@ class FaceTracker(object):
                         new_face = face(landmarks=landi, frame_num=frame_num)
                         face_nums.append(trackList.addFace(new_face))
                     
-                    self.drawRect(frame, boxes, probs, landmarks, face_nums)
+                    self.notate(frame, boxes, probs, landmarks, face_nums)
 
                 out.write(frame)
                 # cv2.imshow('Crowd Faces', frame)
@@ -181,4 +160,4 @@ print('Running on device: {}'.format(device))
 mtcnn = MTCNN(keep_all = True, device = device)
 
 fct = FaceTracker(mtcnn)
-fct.crowdTracking_greedy()
+fct.run_webcam()
