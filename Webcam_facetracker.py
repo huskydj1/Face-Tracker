@@ -91,11 +91,11 @@ class FaceTracker(object):
 
 
     def run_video(self):
-        cap = cv2.VideoCapture('crowd_resized.mp4')
+        cap = cv2.VideoCapture('sourceVideos/crowd_resized.mp4')
         cap.set(cv2.CAP_PROP_FPS, 24)
         
-        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-        out = cv2.VideoWriter(find_available_file(name = 'crowdwalking_output'), fourcc, 24, (640, 480))
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(find_available_file(name = 'outputVideos/crowdwalking_output'), fourcc, 24, (640, 480))
 
         while True:
             ret, frame = cap.read()
@@ -103,7 +103,7 @@ class FaceTracker(object):
                 boxes, probs, landmarks = self.mtcnn.detect(frame, landmarks = True)
 
                 if not(boxes is None):
-                    self.notate(frame, boxes, probs, landmarks)
+                    drawframe.notate(frame, boxes, landmarks = landmarks, probs = probs)
 
                 out.write(frame)
                 # cv2.imshow('Crowd Faces', frame)
@@ -116,11 +116,11 @@ class FaceTracker(object):
         cv2.destroyAllWindows()
 
     def crowdTracking_greedy(self):
-        cap = cv2.VideoCapture('crowd_resized.mp4')
+        cap = cv2.VideoCapture('sourceVideos/crowd_resized.mp4')
         cap.set(cv2.CAP_PROP_FPS, 24)
         
-        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-        out = cv2.VideoWriter(find_available_file(name='crowdwalking_output'), 
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(find_available_file(name='outputVideos/crowdwalking_output'), 
             fourcc, 24, (640, 480))
 
         frame_num = 0
@@ -138,7 +138,7 @@ class FaceTracker(object):
                         new_face = face(landmarks=landi, frame_num=frame_num)
                         face_nums.append(trackList.addFace(new_face))
                     
-                    self.notate(frame, boxes, probs, landmarks, face_nums)
+                    drawframe.notate(frame, boxes, landmarks = landmarks, probs = probs, faceids=face_nums)
 
                 out.write(frame)
                 # cv2.imshow('Crowd Faces', frame)
@@ -160,4 +160,4 @@ print('Running on device: {}'.format(device))
 mtcnn = MTCNN(keep_all = True, device = device)
 
 fct = FaceTracker(mtcnn)
-fct.run_webcam()
+fct.crowdTracking_greedy()

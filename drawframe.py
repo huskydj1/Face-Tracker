@@ -9,32 +9,32 @@ def draw_rect(img, boxes):
 
 def draw_prob(img, probs, boxes):
     for prob, box in zip(probs, boxes):
-        cv2.putText(img = img, text = str(prob), org = (box[2], box[3]), 
-                fontFace = cv2.FONT_HERSHEY_COMPLEX, fontScale = 1, 
-                    color = (0, 0, 255), thickness = 2, lineType = cv2.LINE_AA)
+        cv2.putText(img = img, text = str(format(prob, '.3f')), org = (box[2], box[3]), 
+                fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, 
+                    color = (0, 0, 0))
     return img
 
 def draw_land(img, landmarks):
     for ld in landmarks:
         for land_x, land_y in ld:
                 cv2.circle(img = img, center=(land_x, land_y), radius = 2, 
-                    color = (255, 0, 0), thickness=-1)
+                    color = (255, 0, 0))
     return img
 
 def draw_id(img, faceids, boxes):
     for idi, box in zip(faceids, boxes):
-        cv2.putText(img = img, text = str(idi), org = (box[2], box[3]), 
-                fontFace = cv2.FONT_HERSHEY_COMPLEX, fontScale = 1, color = (0, 0, 255), thickness = 1, lineType = cv2.LINE_AA)
+        cv2.putText(img = img, text = str(idi), org = (box[2], box[1]), 
+                fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, 
+                    color = (0, 0, 0))
     return img
 
-def notate(img, boxes, landmarks, probs = None, faceids = None, show_box = True, show_prob = False, show_land = True, show_id = False):
-    if show_box:
-        img = draw_rect(img, boxes)
-    if show_prob:
-        img = draw_prob(img, probs, boxes)
-    if show_land:
+def notate(img, boxes, landmarks = None, probs = None, faceids = None):
+    img = draw_rect(img, boxes)
+    if not landmarks is None:
         img = draw_land(img, landmarks)
-    if show_id:
+    if not probs is None:
+        img = draw_prob(img, probs, boxes)
+    if not faceids is None:
         img = draw_id(img, faceids, boxes)
         
     return img
