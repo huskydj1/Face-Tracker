@@ -116,21 +116,21 @@ class FaceTracker(object):
         cv2.destroyAllWindows()
 
     def crowdTracking_greedy(self):
-        cap = cv2.VideoCapture('sourceVideos/face-demographics-walking_onepersontrim_sample-videos.mp4')
+        cap = cv2.VideoCapture('sourceVideos/face-demographics-walking_twopersontrim_sample-videos.mp4')
         cap.set(cv2.CAP_PROP_FPS, 30)
         
         fps = 10 # cap.get(cv2.CAP_PROP_FPS)
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         fourcc1 = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(find_available_file(name='outputVideos/onepersonwalking_output'), 
+        out = cv2.VideoWriter(find_available_file(name='outputVideos/twopersonwalking_output'), 
             fourcc1, fps, (frame_width, frame_height))
 
         frame_num = 0
 
         trackList = face_movements()
         
-        debugFile = open("faceInfo.txt", "w")
+        debugFile = open("faceInfo_twoperson.txt", "w")
 
         while True:
             ret, frame = cap.read()
