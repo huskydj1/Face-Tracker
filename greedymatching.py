@@ -10,7 +10,9 @@ class face(object):
         return str(self.frame_num)
 
     def L2Dist(self, other):
-        return np.linalg.norm(self.landmarks-other.landmarks)
+        c = self.landmarks - other.landmarks
+        return np.sum(np.sqrt(np.sum(np.square(c), axis = 1)))
+        # return np.linalg.norm(self.landmarks-other.landmarks)
 
 class sustained(object):
     def __init__(self):
