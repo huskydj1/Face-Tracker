@@ -115,39 +115,44 @@ class FaceTracker(object):
         out.release()
         cv2.destroyAllWindows()
 
-    def crowdTracking_greedy(self):
-        cap = cv2.VideoCapture('sourceVideos/face-demographics-walking_twopersontrim_sample-videos.mp4')
+    def crowdTracking_greedy(self, inputFileFolder, inputFileName):
+        inputFile = inputFileFolder + "/" + inputFileName + ".mp4"
+        cap = cv2.VideoCapture(inputFile)
         cap.set(cv2.CAP_PROP_FPS, 30)
         
-        fps = 10 # cap.get(cv2.CAP_PROP_FPS)
+        fps = 8 # cap.get(cv2.CAP_PROP_FPS)
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         fourcc1 = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(find_available_file(name='outputVideos/twopersonwalking_output'), 
+        out = cv2.VideoWriter(find_available_file(name=("outputVideos/OUTPUT_" + inputFileName)), 
             fourcc1, fps, (frame_width, frame_height))
 
         frame_num = 0
 
         trackList = face_movements()
         
-        debugFile = open("faceInfo_twoperson.txt", "w")
+        debugFile = open("FACEINFO_{}.txt".format(inputFileName), "w")
 
         while True:
             ret, frame = cap.read()
             if ret:
                 boxes, probs, landmarks = self.mtcnn.detect(frame, landmarks = True)
+                numFacesDetected = 0 if boxes is None else len(boxes)
 
-                debugFile.write(str(frame_num) + " " + str(not(boxes is None)) + " "+ str(trackList) + '\n')
+                # Frame by Frame Info (Coupled with outputVideos\onepersonwalking_output12.mp4)
+                # Frame #, Face Detected (bool), trackList string representation (face class identified by frame #)
+                infoTemp = "FRAME #: " + str(frame_num) + " Faces Detected: " + str(numFacesDetected)
+                debugFile.write(infoTemp + " TRACKLIST: "+ str(trackList) + '\n')
 
                 if not(boxes is None):
-                    face_nums = [0] * len(landmarks)
+                    face_nums = [0] * numFacesDetected
                     for i, landi in enumerate(landmarks):
                         new_face = face(landmarks=landi, frame_num=frame_num)
                         face_nums[i] = trackList.addFace(new_face)
                     
                     drawframe.notate(frame, boxes, landmarks = landmarks, probs = probs, faceids=face_nums)
                 
-                cv2.putText(frame, str(frame_num), (50, 50), cv2.FONT_HERSHEY_DUPLEX, 0.8, (0,0,0))
+                cv2.putText(frame, infoTemp, (30, 25), cv2.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 0))
                 out.write(frame)
                 
                 frame_num += 1
@@ -167,4 +172,7 @@ print('Running on device: {}'.format(device))
 mtcnn = MTCNN(keep_all = True, device = device)
 
 fct = FaceTracker(mtcnn)
-fct.crowdTracking_greedy()
+fct.crowdTracking_greedy("sourceVideos", "oneman_face-demographics-walking-and-pause")
+fct.crowdTracking_greedy("sourceVideos", "onemanonewoman_face-demographics-walking-and-pause")
+fct.crowdTracking_greedy("sourceVideos", "onemantwowomen_face-demographics-walking-and-pause")
+fct.crowdTracking_greedy("sourceVideos", "onewoman_face-demographics-walking-and-pause")
