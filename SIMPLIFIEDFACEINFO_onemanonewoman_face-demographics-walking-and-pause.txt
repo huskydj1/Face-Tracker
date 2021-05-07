@@ -1,0 +1,16 @@
+From 0 to 90: 0 faces detected
+From 91 to 103: 1 faces detected
+From 104 to 123: 2 faces detected
+From 124 to 135: 1 faces detected
+From 136 to 138: 2 faces detected
+From 139 to 144: 1 faces detected
+From 145 to 185: 2 faces detected
+From 186 to 188: 1 faces detected
+From 189 to 205: 2 faces detected
+From 206 to 208: 1 faces detected
+From 209 to 228: 2 faces detected
+From 229 to 229: 1 faces detected
+From 230 to 493: 2 faces detected
+From 494 to 494: 0 faces detected
+From 495 to 495: 1 faces detected
+From 496 to 536: 0 faces detected

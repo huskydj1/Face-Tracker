@@ -1,0 +1,5 @@
+From 0 to 39: 0 faces detected
+From 40 to 40: 1 faces detected
+From 41 to 46: 0 faces detected
+From 47 to 484: 1 faces detected
+From 485 to 522: 0 faces detected
