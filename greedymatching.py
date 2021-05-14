@@ -1,8 +1,29 @@
 import numpy as np
 from collections import deque
 
+'''
+Naive Face-Tracking Implementation
+
+Assumptions:
+- high frame-rate video
+- accurate face-recognition (with MTCNN)
+
+Algorithm:
+- For each new face, compare with faces from previous frame and match with closest one (using L2 distance)
+
+Problems:
+- MTCNN is not always accurate, and the gaps in face detection results in incorrect tracking results
+
+Next-Steps:
+- New model:
+   1) Initialize new faces using facenet-based face identification
+   2) If an old face, match with a) same face from previous frame b) consider each face as an update (try to update previous frame)
+   3) End based on velocity of face-tracking
+'''
+
 class face(object):
     def __init__(self, landmarks, frame_num):
+        print(landmarks.shape)
         self.landmarks = landmarks
         self.frame_num = frame_num
     

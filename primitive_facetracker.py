@@ -173,9 +173,9 @@ print('Running on device: {}'.format(device))
 mtcnn = MTCNN(keep_all = True, device = device)
 
 fct = FaceTracker(mtcnn)
-fct.run_webcam()
-'''
 fct.crowdTracking_greedy("sourceVideos", "oneman_face-demographics-walking-and-pause")
+'''
+fct.run_webcam()
 fct.crowdTracking_greedy("sourceVideos", "onemanonewoman_face-demographics-walking-and-pause")
 fct.crowdTracking_greedy("sourceVideos", "onemantwowomen_face-demographics-walking-and-pause")
 fct.crowdTracking_greedy("sourceVideos", "onewoman_face-demographics-walking-and-pause")
