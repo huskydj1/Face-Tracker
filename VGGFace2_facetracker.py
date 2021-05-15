@@ -47,11 +47,15 @@ def track(inputFileFolder, inputFileName, mtcnn):
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     fourcc1 = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(find_available_file(name=("outputVideos/OUTPUT_" + inputFileName)), 
+    out = cv2.VideoWriter(find_available_file(name=("outputVideos/VGTOUT_" + inputFileName)), 
         fourcc1, fps, (frame_width, frame_height))
 
     #Matching Class
     matching = Matching()
+
+    #Frame by Frame Information:
+    
+    debugFile = open("VGTINFO_{}.txt".format(inputFileName), "w")
 
     #Read frames
     frame_num = 0
@@ -64,8 +68,10 @@ def track(inputFileFolder, inputFileName, mtcnn):
 
             if not(face_array is None):
                 boxes, probs, landmarks = mtcnn.detect(frame, landmarks = True)
-                id_list = matching.update_batch(face_array, frame_num)
+                id_list, scores = matching.update_batch(face_array, frame_num)
                 drawframe.notate(frame, boxes, landmarks = landmarks, probs = probs, faceids=id_list)
+                
+                debugFile.write(str(frame_num) + ": " + str(id_list) + " " + str(scores) + '\n')
 
             # Frame by Frame Info (Coupled with outputVideos\onepersonwalking_output12.mp4)
             # Frame #, Face Detected (bool), trackList string representation (face class identified by frame #)
@@ -78,6 +84,8 @@ def track(inputFileFolder, inputFileName, mtcnn):
         else:
             break
         
+    
+    debugFile.close()
     cap.release()
     out.release()
     cv2.destroyAllWindows()
@@ -86,7 +94,7 @@ def track(inputFileFolder, inputFileName, mtcnn):
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 if torch.cuda.is_available():
     print(torch.cuda.get_device_name(0))
-print('Running on device: {}'.format(device))
+print('Running on device: {}'.format(device))   
 
 mtcnn = MTCNN(keep_all = True, device = device)
 '''img = cv2.imread("sourceVideos/muskbezos.jpg")
@@ -96,4 +104,10 @@ face_array, prob = mtcnn(img, return_prob = True)
 for i, face in enumerate(face_array):
     cv2.imshow("image" + str(i), face.permute(1, 2, 0).numpy()); cv2.waitKey(0); cv2.destroyAllWindows(); cv2.waitKey(1)
 '''
+
 track("sourceVideos", "onemanonewoman_face-demographics-walking-and-pause", mtcnn)
+'''track("sourceVideos", "dogrunning", mtcnn)
+track("sourceVideos", "oneman_face-demographics-walking-and-pause", mtcnn)
+track("sourceVideos", "onemanonewoman_face-demographics-walking-and-pause", mtcnn)
+track("sourceVideos", "onemantwowomen_face-demographics-walking-and-pause", mtcnn)
+track("sourceVideos", "onewoman_face-demographics-walking-and-pause", mtcnn)'''
