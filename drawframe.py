@@ -7,7 +7,7 @@ def draw_boxes(img, boxes, color = (0, 0, 255), thickness = 2):
                 color = color, thickness = thickness)
     return img
 
-def draw_prob(img, probs, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, color = (0, 0, 0)):
+def draw_prob(img, probs, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, color = (217, 255, 0)):
     for prob, box in zip(probs, boxes):
         cv2.putText(img = img, text = str(format(prob, '.3f')), org = (box[2], box[3]), 
                 fontFace = fontFace, fontScale = fontScale, 
