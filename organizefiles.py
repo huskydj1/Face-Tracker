@@ -7,8 +7,10 @@ def find_nextavailable_file(folder, name, type = "mp4"):
     file_num = 0
     while os.path.isfile(file_name.format(file_num)):
         file_num += 1
+    res = file_name.format(file_num)
 
-    return file_name.format(file_num)
+    print(res)
+    return res
 
 def openInputVideo(folder, name, type = "mp4", fps = None):
     inputFile = folder + "/" + name + "." + type

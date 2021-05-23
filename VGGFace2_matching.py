@@ -32,28 +32,62 @@ class Face(object):
         
         self.static_count += 1
 
+    def __str__(self):
+        str = "ID: {fid}, REC_FRAME: {fframe}"
+        return str.format(fid = self.id, fframe = self.recent_frame_num)
+
 class Matching(object):
     def __init__(self):  
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
         self.prev_data = []
     
-    def drawData(self, frame):
-        boxes = []
-        landmarks = []
-        id_list = []
-        count_list = []
+    def __str__(self):
+        res = ""
+        for facei in self.prev_data:
+            res += "[{frep}] ".format(frep = str(facei))
+        return res
 
+    def getBoxes(self):
+        boxes = []
         for facei in self.prev_data:
             boxes.append(facei.recent_box)
+        return boxes
+    
+    def getLandmarks(self):
+        landmarks = []
+        for facei in self.prev_data:
             landmarks.append(facei.recent_landmarks)
+        return landmarks
+    
+    def getIds(self):
+        id_list = []
+        for facei in self.prev_data:
             id_list.append(facei.id)
+        return id_list
+
+    def getRecentFrames(self):
+        frame_list = []
+        for facei in self.prev_data:
+            frame_list.append(facei.recent_frame_num)
+        return frame_list
+    
+    def getCounts(self):
+        count_list = []
+        for facei in self.prev_data:
             count_list.append(facei.static_count)
+        return count_list
+    
+    def drawData(self, frame, fontScale = 0.3):
+        boxes = self.getBoxes()
+        landmarks = self.getLandmarks()
+        id_list = self.getIds()
+        frame_list = self.getRecentFrames()
 
         drawframe.draw_boxes(frame, boxes)
         drawframe.draw_land(frame, landmarks)
-        drawframe.draw_id(frame, id_list, boxes, fontScale = 1.0)
-        drawframe.draw_prob(frame, count_list, boxes, fontScale = 1.0)
+        drawframe.draw_id(frame, id_list, boxes, fontScale = fontScale)
+        drawframe.draw_prob(frame, frame_list, boxes, fontScale = fontScale)
 
     def get_embeddings(self, face_array):       
         aligned = face_array.to(self.device)
@@ -70,31 +104,35 @@ class Matching(object):
         embeddings = self.get_embeddings(face_array)
         taken = np.full((len(face_array),), -1)
 
-        if len(self.prev_data) > 0:
-            # Get all Scores and Distances between new and old faces
-            scores = np.zeros((len(face_array), len(self.prev_data)))
-            distances = np.zeros((len(face_array), len(self.prev_data)))
+        N_new = len(face_array)
+        N_old = len(self.prev_data)
 
-            for i in range(len(face_array)):
-                for j in range(len(self.prev_data)):
-                    scores[i][j] = self.match_score(self.prev_data[j].avg_embedding,
-                                                        embeddings[i])
-                    distances[i][j] = np.sum(np.linalg.norm(landmarks[i]-self.prev_data[j].recent_landmarks,
+        if N_old > 0:
+            # Get all Scores and Distances between new and old faces
+            scores = np.zeros((N_new, N_old))
+            distances = np.zeros((N_new, N_old))
+
+            for i in range(N_new):
+                for j in range(N_old):
+                    scores[i, j] = self.match_score(embeddings[i], self.prev_data[j].avg_embedding)
+                    distances[i, j] = np.sum(np.linalg.norm(landmarks[i]-self.prev_data[j].recent_landmarks,
                                                         axis = 1))
             
             # Update Existing Faces
-            MAX_DIST = pow(10, 32)
+            MAX_DIST = pow(10, 16)
             distances[scores>thresh] = MAX_DIST
             matches = np.argmin(distances, axis = 0)
 
-            # print(str(frame_num) + ": " + str(distances))
+            # Match in Order of Increasing Distance (update prev_faces who have a stronger match first)
+            values = [(j, distances[matches[j], j]) for j in range(N_old)]
+            values = np.array(values, dtype = [('j', int), ('matched-distance', np.float64)])
 
-            for j, old_face in enumerate(self.prev_data):
-                if distances[matches[j]][j] == MAX_DIST or taken[matches[j]] != -1:
-                    old_face.static_count += 1
+            for j, match_dist in np.sort(values, order = 'matched-distance'):
+                if distances[matches[j], j] == MAX_DIST or taken[matches[j]] != -1:
+                    self.prev_data[j].static_count += 1
                 else:
                     taken[matches[j]] = j
-                    old_face.update(embeddings[matches[j]], boxes[matches[j]], landmarks[matches[j]], frame_num)
+                    self.prev_data[j].update(embeddings[matches[j]], boxes[matches[j]], landmarks[matches[j]], frame_num)
 
         # Add Non-Taken Faces
         for i in range(len(face_array)):
@@ -118,7 +156,7 @@ class Matching(object):
                 known_face = person[-1]
                 cur_score = self.match_score(known_face.embedding, embedding)
                 scores[-1].append(cur_score)
-                # print(cur_score)
+                
                 if cur_score < best_score:
                     best_score = cur_score
                     best_i = i
