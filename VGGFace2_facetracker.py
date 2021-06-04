@@ -41,7 +41,7 @@ def track(inputFileFolder, inputFileName, device, fontScale = 0.3, thresh = 0.5)
             if numFacesDetected > 0:
                 boxes, probs, landmarks = mtcnn.detect(frame, landmarks = True)
                 matching.updateBatch(face_array, boxes, landmarks, frame_num, thresh = thresh)
-            matching.drawData(frame, fontScale = fontScale)
+            matching.drawData(frame, fontScale = fontScale, color = (212, 78, 85))
 
             debugFile.write(str(frame_num) + ": " + str(numFacesDetected) + " " 
                 + str(len(matching.prev_data)) + " " + str(matching) + '\n')
@@ -72,8 +72,12 @@ if torch.cuda.is_available():
     print(torch.cuda.get_device_name(0))
 print('Running on device: {}'.format(device))
 
-# TODO: Experiment with Thresh (for embed-scores) and Alpha (for average-past-embed) constants
 
+# RUN
+
+track("sourceVideos", "walkinghallway-pexels", device = device, fontScale = 1.3)
+
+'''
 track("sourceVideos", "oneman_face-demographics-walking-and-pause", device = device)
 track("sourceVideos", "onewoman_face-demographics-walking-and-pause", device = device)
 track("sourceVideos", "onemanonewoman_face-demographics-walking-and-pause", device = device)
@@ -81,3 +85,4 @@ track("sourceVideos", "onemantwowomen_face-demographics-walking-and-pause", devi
 
 track("sourceVideos", "walkinghallway-pexels", device = device, fontScale = 1.3)
 track("sourceVideos", "dogrunning", device = device, fontScale = 1.3)
+'''

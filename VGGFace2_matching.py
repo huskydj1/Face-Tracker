@@ -78,7 +78,7 @@ class Matching(object):
             count_list.append(facei.static_count)
         return count_list
     
-    def drawData(self, frame, fontScale = 0.3):
+    def drawData(self, frame, fontScale = 0.3, color = (0, 241, 245)):
         boxes = self.getBoxes()
         landmarks = self.getLandmarks()
         id_list = self.getIds()
@@ -86,8 +86,8 @@ class Matching(object):
 
         drawframe.draw_boxes(frame, boxes)
         drawframe.draw_land(frame, landmarks)
-        drawframe.draw_id(frame, id_list, boxes, fontScale = fontScale)
-        drawframe.draw_prob(frame, frame_list, boxes, fontScale = fontScale)
+        drawframe.draw_id(frame, id_list, boxes, fontScale = fontScale, color = color)
+        drawframe.draw_prob(frame, frame_list, boxes, fontScale = fontScale, color = color)
 
     def get_embeddings(self, face_array):       
         aligned = face_array.to(self.device)
@@ -102,10 +102,12 @@ class Matching(object):
 
     def updateBatch(self, face_array, boxes, landmarks, frame_num, thresh = 0.75):
         embeddings = self.get_embeddings(face_array)
-        taken = np.full((len(face_array),), -1)
 
         N_new = len(face_array)
         N_old = len(self.prev_data)
+
+        matched_new = np.full((N_new,), -1)
+        matched_old = np.full((N_old,), -1)
 
         if N_old > 0:
             # Get all Scores and Distances between new and old faces
@@ -119,27 +121,32 @@ class Matching(object):
                                                         axis = 1))
             
             # Update Existing Faces
-            MAX_DIST = pow(10, 16)
-            distances[scores>thresh] = MAX_DIST
-            matches = np.argmin(distances, axis = 0)
-
             # Match in Order of Increasing Distance (update prev_faces who have a stronger match first)
-            values = [(j, distances[matches[j], j]) for j in range(N_old)]
-            values = np.array(values, dtype = [('j', int), ('matched-distance', np.float64)])
+            values = []
+            for i in range(N_new):
+                for j in range(N_old):
+                    if scores[i, j] <= thresh:
+                        values.append((j, i, distances[i, j]));
+            values = np.array(values, dtype = [('j', int), ('i', int), ('matched-distance', np.float64)])
 
-            for j, match_dist in np.sort(values, order = 'matched-distance'):
-                if distances[matches[j], j] == MAX_DIST or taken[matches[j]] != -1:
-                    self.prev_data[j].static_count += 1
-                else:
-                    taken[matches[j]] = j
-                    self.prev_data[j].update(embeddings[matches[j]], boxes[matches[j]], landmarks[matches[j]], frame_num)
+            for j, i, match_dist in np.sort(values, order = 'matched-distance'):
+                if matched_old[j]==-1 and matched_new[i]==-1:
+                    matched_old[j] = i
+                    matched_new[i] = j
 
-        # Add Non-Taken Faces
-        for i in range(len(face_array)):
-            if taken[i] == -1:
-                taken[i] = len(self.prev_data)
-                new_face = Face(embeddings[i], boxes[i], landmarks[i], frame_num, taken[i])
+                    self.prev_data[j].update(embeddings[i], boxes[i], landmarks[i], frame_num)
+
+        #Update for Not Taken New Faces
+        for i in range(N_new):
+            if matched_new[i] == -1:
+                matched_new[i] = len(self.prev_data)
+                new_face = Face(embeddings[i], boxes[i], landmarks[i], frame_num, matched_new[i])
                 self.prev_data.append(new_face)
+
+        #Update for Not Taken Old Faces
+        for j in range(N_old):
+            if matched_old[j] == -1:
+                self.prev_data[j].static_count += 1
 
     def updateBatch_directNewcentric(self, face_array, frame_num, thresh = 0.5):
         embeddings = self.get_embeddings(face_array)
