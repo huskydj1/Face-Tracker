@@ -1,8 +1,13 @@
+#https://sefiks.com/2021/04/27/deep-face-detection-with-retinaface-in-python/
+
+import sys
+sys.path.append("D:/Python/Face Tracker")
+
 import cv2
 import time
 import torch
 import numpy as np
-from facenet_pytorch import MTCNN
+from retinaface import RetinaFace
 from PIL import Image
 
 import drawframe
@@ -11,55 +16,54 @@ import organizefiles
 
 
 def track(inputFileFolder, inputFileName, device, fontScale = 0.3, thresh = 0.5):
-
     #Open Input
     cap = organizefiles.openInputVideo(inputFileFolder, inputFileName)
     
     #Open MP4 Output
-    out = organizefiles.openOutputVideo(folder = "outputVideos", name = ("OUT_" + inputFileName), 
+    out = organizefiles.openOutputVideo(folder = "outputVideos", name = ("RETINA_" + inputFileName), 
         fps = 8, frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)));
-
-    #Open TXT Output
-    debugFile = organizefiles.openOutputText(folder = "outputTexts", name = ("INFO_" + inputFileName))
 
     #//////////////////////////////////
 
-    #MTCNNex
-    mtcnn = MTCNN(keep_all = True, device = device)
-
-    #Matching Class (VGGFace2)
-    matching = Matching()
-
-    debugFile.write("STARTED: THRESH = {}\n".format(thresh))
-
-    #Start Timer
-    start = time.time()
+    #RetinaFace
 
     for frame_num in range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT))):
+        frame_filename = "RetinaFace_FRAME.jpg"
         ret, frame = cap.read()
-        if ret:
-            #Get Cropped Faces (MTCNN)
-            face_array = mtcnn(frame)
-            
-            numFacesDetected = 0 if face_array is None else len(face_array)
-            if numFacesDetected > 0:
-                boxes, probs, landmarks = mtcnn.detect(frame, landmarks = True)
-                matching.updateBatch(face_array, boxes, landmarks, frame_num, thresh = thresh)
-            matching.drawData(frame, fontScale = fontScale, color = (212, 78, 85))
+        cv2.imwrite(frame_filename, frame)
 
-            debugFile.write(str(frame_num) + ": " + str(numFacesDetected) + " " 
-                + str(len(matching.prev_data)) + " " + str(matching) + '\n')
+        if ret:
+            faces = RetinaFace.detect_faces(frame_filename)
+
+            if frame_num%100 == 0:
+                print("Frame Num: " + str(frame_num))
+            # print(len(faces))
+            # print(type(faces))
+
+            numFacesDetected = 0 if faces is None or not(type(faces) is dict) else len(faces)
+            print(numFacesDetected)
+
+            if numFacesDetected > 0:
+                for key, identity in faces.items():
+                    facial_area = identity["facial_area"]
+                    landmarks = identity["landmarks"]
+                    
+                    #highlight facial area
+                    cv2.rectangle(frame, (facial_area[2], facial_area[3])
+                    , (facial_area[0], facial_area[1]), (255, 255, 255), 1)
+                    
+                    #highlight the landmarks
+                    cv2.circle(frame, tuple(landmarks["left_eye"]), 1, (0, 0, 255), -1)
+                    cv2.circle(frame, tuple(landmarks["right_eye"]), 1, (0, 0, 255), -1)
+                    cv2.circle(frame, tuple(landmarks["nose"]), 1, (0, 0, 255), -1)
+                    cv2.circle(frame, tuple(landmarks["mouth_left"]), 1, (0, 0, 255), -1)
+                    cv2.circle(frame, tuple(landmarks["mouth_right"]), 1, (0, 0, 255), -1)
 
             infoTemp = "FRAME #: " + str(frame_num) + " Faces Detected: " + str(numFacesDetected)
             cv2.putText(frame, infoTemp, (30, 25), cv2.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 0))
             out.write(frame)
         else:
             break
-    
-    #End Timer
-    end = time.time()
-
-    debugFile.write("COMPLETED Runtime of the program is {} \n".format(end - start))
     
     #//////////////////////////////////
 
@@ -69,8 +73,6 @@ def track(inputFileFolder, inputFileName, device, fontScale = 0.3, thresh = 0.5)
     #Close MP4 Output 
     out.release()
 
-    #Close TXT Output
-    debugFile.close()
 
 # CUDA DEVICE
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -81,7 +83,10 @@ print('Running on device: {}'.format(device))
 
 # RUN
 
-track("sourceVideos", "walkinghallway-pexels", device = device, fontScale = 1.3)
+
+track("sourceVideos", "oneman_face-demographics-walking-and-pause", device = device)
+
+
 
 '''
 track("sourceVideos", "oneman_face-demographics-walking-and-pause", device = device)
