@@ -9,7 +9,6 @@ from facenet_pytorch import MTCNN
 from PIL import Image
 
 import drawframe
-from VGGFace2_matching import Matching
 import organizefiles
 
 
@@ -57,7 +56,6 @@ print('Running on device: {}'.format(device))
 
 
 # RUN
-track("sourceVideos", "walkinghallway-pexels", device = device, fontScale = 1.3)
 
 '''
 track("sourceVideos", "oneman_face-demographics-walking-and-pause", device = device)
@@ -67,4 +65,4 @@ track("sourceVideos", "onemantwowomen_face-demographics-walking-and-pause", devi
 
 track("sourceVideos", "walkinghallway-pexels", device = device, fontScale = 1.3)
 track("sourceVideos", "dogrunning", device = device, fontScale = 1.3)
-'''
+''' 
