@@ -107,3 +107,5 @@ def track(conf_threshes):
 
 
 track(conf_threshes = [0.3]) #doesn't allow nms_threshold modifications line 58 https://github.com/serengil/retinaface/blob/master/retinaface/RetinaFace.py
+
+# NEED TO RUN AT ROOT OF REPO

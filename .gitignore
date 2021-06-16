@@ -1,4 +1,6 @@
+outputInterpretedVideos/
 outputTexts/
 outputVideos/
 sourceVideos/
+
 __pycache__/
