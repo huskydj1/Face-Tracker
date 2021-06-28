@@ -1,3 +1,4 @@
+#https://github.com/hukkelas/DSFD-Pytorch-Inference
 
 # Working directory: "Face Tracker" (not needed for colab)
 import sys
@@ -5,8 +6,9 @@ sys.path.append("D:/Python/Face Tracker")
 
 # Necessary Packages
 import numpy as np  
-import time
 import cv2
+import torch
+import time
 
 # Necessary Repos
 from retinaface import RetinaFace # https://github.com/serengil/retinaface
@@ -41,7 +43,7 @@ def track(conf_threshes):
             cap = organizefiles.openInputVideo(inputFileFolder, input_name)
 
             # Output:
-            output_long = detector_name + "_" + input_short + "_" + "C" + str(conf_thresh) + "v"
+            output_long = detector_name + "_" + input_short + "_" + "C" + str(conf_thresh) + "_ " +  "I" + str(iou_thresh) + "v"
             print(output_long)
 
             # Open TXT Output
@@ -63,6 +65,8 @@ def track(conf_threshes):
                 if ret:
                     if frame_num%100 == 0:
                         print("Frame Num: " + str(frame_num))
+                    else:
+                        continue
                     '''
                     elif frame_num==100:
                         break
@@ -105,7 +109,10 @@ def track(conf_threshes):
             debugFile.close()
 
 
+# CUDA DEVICE
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+if torch.cuda.is_available():
+    print(torch.cuda.get_device_name(0))
+print('Running on device: {}'.format(device))
 
 track(conf_threshes = [0.3]) #doesn't allow nms_threshold modifications line 58 https://github.com/serengil/retinaface/blob/master/retinaface/RetinaFace.py
-
-# NEED TO RUN AT ROOT OF REPO
