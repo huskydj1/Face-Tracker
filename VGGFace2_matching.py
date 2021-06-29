@@ -90,8 +90,9 @@ class Matching(object):
         drawframe.draw_prob(frame, frame_list, boxes, fontScale = fontScale, color = color)
 
     def get_embeddings(self, face_array):       
-        aligned = face_array.to(self.device)
-        embeddings = self.resnet(aligned).detach().cpu()
+        # aligned = face_array.to(self.device)
+        # embeddings = self.resnet(aligned).detach().cpu()
+        embeddings = self.resnet(face_array)
         return embeddings
     
     def match_score(self, known_embedding, new_embedding):

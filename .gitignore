@@ -2,5 +2,6 @@ outputInterpretedVideos/
 outputTexts/
 outputVideos/
 sourceVideos/
+arcfaceData/
 
 __pycache__/
