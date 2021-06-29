@@ -95,6 +95,9 @@ def track(inputFileFolder, input_short, input_name, detector_name, conf_thresh, 
                     face_array.append(frame[ymin:ymax, xmin:xmax, :])
 
             numFacesDetected = 0 if face_array is None else len(face_array)
+
+            '''
+            # Old-Face Translating Updates
             if numFacesDetected > 0:
                 matching.updateBatch(
                     face_array = face_array, 
@@ -105,10 +108,19 @@ def track(inputFileFolder, input_short, input_name, detector_name, conf_thresh, 
                 )
             
             matching.drawData(frame, fontScale = scaled_box_fontScale, color = adjusted_fontColor)
+            '''
 
-            '''# Notate Frame
-            drawframe.notate(img=frame, boxes = boxes, probs = probs, 
-                thickness = scaled_thickness, fontScale = scaled_box_fontScale, fontColor = adjusted_fontColor)'''
+            # Primitive On the Spot
+            id_list = scores = None
+            if numFacesDetected > 0:
+                id_list, scores = matching.updateBatch_directNewcentric(
+                    face_array = face_array,
+                    frame_num = frame_num,
+                    thresh = 0.75, # For Matching
+                )
+
+            drawframe.notate(img=frame, boxes = boxes, faceids = id_list, 
+                thickness = scaled_thickness, fontScale = scaled_box_fontScale, fontColor = adjusted_fontColor)
 
             if numFacesDetected != last_update_cnt:
                 last_update_frame = frame_num

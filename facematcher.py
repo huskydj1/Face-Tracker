@@ -175,3 +175,46 @@ class Matching(object):
         for j in range(N_old):
             if matched_old[j] == -1:
                 self.prev_data[j].static_count += 1
+
+    def updateBatch_directNewcentric(self, face_array, frame_num, thresh = 0.5):
+        num_faces = len(face_array)
+
+        embeddings = self.get_embeddings(face_array, frame_num)
+
+        id_list = []
+        scores = []
+
+        for embedding in embeddings:
+            # Create new list for scores of current embedding
+            scores.append([])
+
+            # Get Best Pairing 
+            best_i = -1
+            best_score = 100
+
+            if len(self.prev_data) > 0:
+                for i, person in enumerate(self.prev_data):
+                    cur_score = self.match_score(person.recent_embedding, embedding)
+                    scores[-1].append(cur_score)
+                    
+                    if cur_score < best_score:
+                        best_score = cur_score
+                        best_i = i
+            
+            if best_score <= thresh:
+                id_list.append(best_i)
+                self.prev_data[best_i].recent_embedding = embedding
+                self.prev_data[best_i].recent_frame_num = frame_num
+                self.prev_data[best_i].static_count = 1
+            else:
+                id_list.append(len(self.prev_data))
+                new_face = Face(
+                    embedding = embedding,
+                    box = None, 
+                    landmarks = None,
+                    frame_num = frame_num,
+                    id = len(self.prev_data),
+                )
+                self.prev_data.append(new_face)
+
+        return [id_list, scores]
