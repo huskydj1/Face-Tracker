@@ -119,13 +119,18 @@ def interpretRetina(conf_threshes, iou_threshes, manual_conf = 0.5):
 
     inputFileFolder = "sourceVideos"
     input_videos = {
+        "bigcrowd" : "skywalkmahanakhon-videvo",
+    }
+    # "rainpedestrians" : "crowdedstreetundertherain-pexels",
+
+    ''''
         "panning" : "dogrunning",
         "fourhallway" :  "walkinghallway-pexels",
         "oneman" : "oneman_face-demographics-walking-and-pause",
         "onewoman" : "onewoman_face-demographics-walking-and-pause",
         "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
         "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause"
-    }
+    '''
     
     
     for conf_thresh in conf_threshes: # For each confidence threshold
@@ -217,18 +222,23 @@ def interpretRetina(conf_threshes, iou_threshes, manual_conf = 0.5):
 
                 #Close MP4 Output 
                 out.release()
-
+'''
 def interpretDSFD(conf_threshes, iou_threshes):
 
     inputFileFolder = "sourceVideos"
     input_videos = {
-        "panning" : "dogrunning",
-        "fourhallway" :  "walkinghallway-pexels",
-        "oneman" : "oneman_face-demographics-walking-and-pause",
-        "onewoman" : "onewoman_face-demographics-walking-and-pause",
-        "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
-        "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause"
+        "bigcrowd" : "skywalkmahanakhon-videvo",
     }
+
+    
+        "rainpedestrians" : "crowdedstreetundertherain-pexels",
+        "bigcrowd" : "skywalkmahanakhon-videvo",
+    "panning" : "dogrunning",
+    "fourhallway" :  "walkinghallway-pexels",
+    "oneman" : "oneman_face-demographics-walking-and-pause",
+    "onewoman" : "onewoman_face-demographics-walking-and-pause",
+    "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
+    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause"
     
     
     for conf_thresh in conf_threshes: # For each confidence threshold
@@ -319,7 +329,7 @@ def interpretDSFD(conf_threshes, iou_threshes):
 
                 #Close MP4 Output 
                 out.release()
-
+'''
 
 
 interpretRetina(conf_threshes = [0.3], iou_threshes = [0.3], manual_conf = 0.6)

@@ -18,6 +18,21 @@ import organizefiles
 from facenet_pytorch import MTCNN
 from facematcher import Matching
 
+#Drawing people's paths
+
+dot_bank = []
+def randomColorGenerator():
+    return list(np.random.random(size=3) * 256)
+color_map = {}
+def getColor(id):
+    if not(id in color_map.keys()):
+        color = randomColorGenerator()
+        while color in color_map.values():
+            color = randomColorGenerator()
+        color_map[id] = color
+
+    return color_map[id]
+
 def readBoxes(boxFile, manual_conf):
     frame_info = boxFile.readline().strip()
     frame_info_arr = frame_info.split()
@@ -112,15 +127,29 @@ def track(inputFileFolder, input_short, input_name, detector_name, conf_thresh, 
 
             # Primitive On the Spot
             id_list = scores = None
+            
             if numFacesDetected > 0:
                 id_list, scores = matching.updateBatch_directNewcentric(
                     face_array = face_array,
                     frame_num = frame_num,
                     thresh = 0.75, # For Matching
                 )
+                
+                boxColors = []
+                for i, id in enumerate(id_list):
+                    boxColors.append(getColor(id))
 
-            drawframe.notate(img=frame, boxes = boxes, faceids = id_list, 
+                    center = (
+                        int(round((boxes[i][0] + boxes[i][2])/2)), 
+                        int(round((boxes[i][1] + boxes[i][3])/2)),                        
+                    )
+
+                    dot_bank.append((center, boxColors[i]))
+
+                drawframe.notate(img=frame, boxes = boxes, boxColors = boxColors, faceids = id_list, 
                 thickness = scaled_thickness, fontScale = scaled_box_fontScale, fontColor = adjusted_fontColor)
+
+            drawframe.drawDots(img=frame, dot_bank = dot_bank)
 
             if numFacesDetected != last_update_cnt:
                 last_update_frame = frame_num
@@ -129,7 +158,6 @@ def track(inputFileFolder, input_short, input_name, detector_name, conf_thresh, 
             frame_info = "FRAME #: " + str(frame_num) + " Faces Detected: " + str(numFacesDetected) + " Last Update On: " + str(last_update_frame)
             cv2.putText(frame, frame_info, (scaled_title_offset, scaled_title_offset), cv2.FONT_HERSHEY_DUPLEX, scaled_title_fontScale, (0, 0, 0))
             out.write(frame)
-
         else:
             break
 
@@ -143,14 +171,19 @@ def track(inputFileFolder, input_short, input_name, detector_name, conf_thresh, 
     out.release()
 
 inputFileFolder = "sourceVideos"
-input_videos = {
+input_videos = {  
     "panning" : "dogrunning",
     "oneman" : "oneman_face-demographics-walking-and-pause",
     "onewoman" : "onewoman_face-demographics-walking-and-pause",
     "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
-    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",    
-    "fourhallway" :  "walkinghallway-pexels",
+    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",  
 }
+'''
+Inactive Videos:
+    "rainpedestrians" : "crowdedstreetundertherain-pexels",
+    
+    "fourhallway" :  "walkinghallway-pexels",
+'''
 
 for input_short, input_name in input_videos.items():
     track(
