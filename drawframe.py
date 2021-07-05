@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-'''
+
 def draw_boxes(img, boxes, boxColors = [], thickness = 2):
     for i, box in enumerate(boxes):
             cv2.rectangle(img = img, pt1 = (box[0], box[1]), pt2 = (box[2], box[3]), 
@@ -88,3 +88,4 @@ def notate(img, boxes, landmarks = None, probs = None, faceids = None, thickness
         img = draw_id(img, faceids, boxes, fontScale = fontScale, color = fontColor)
         
     return img
+'''

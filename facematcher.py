@@ -3,6 +3,9 @@ sys.path.insert(1, 'D:/Python/face.evoLVe.PyTorch/')
 
 from backbone import model_irse as mi
 from util import extract_feature_v1 as ef
+
+from applications.align import face_align_import as fa
+
 from scipy import spatial
 import os
 
@@ -50,8 +53,11 @@ class Matching(object):
 
         #Reset Data Folder
         import shutil
-        shutil.rmtree("D:/Python/Face Tracker/arcfaceData")
-        os.mkdir("D:/Python/Face Tracker/arcfaceData")
+
+        root = "D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData"
+        if os.path.isdir(root):
+            shutil.rmtree(root)
+        os.mkdir(root)
     
     def __str__(self):
         res = ""
@@ -102,7 +108,9 @@ class Matching(object):
 
     def get_embeddings(self, face_array, frame_num):
 
-        directory = f"D:/Python/Face Tracker/arcfaceData/{frame_num}"
+        # Write in Face Crops from Current Frame
+        directory = f"D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/{frame_num}"
+
         os.mkdir(directory)
 
         image_path = directory +  "/id1"
@@ -110,8 +118,20 @@ class Matching(object):
         for i, face in enumerate(face_array):
             cv2.imwrite(image_path + f"/{i}.jpg", face)
 
+        # Perform Face Alignment First
+        os.mkdir(directory + "_align")
+        os.mkdir(directory + "_align/id1")
+
+        #python face_align.py -source_root D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/0 -dest_root D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/0_align -crop_size 112
+        fa.face_align(
+            source_root = 'D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/0',
+            dest_root = 'D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/0_align',
+            crop_size = 112, # I'm not confident if this is correct tbh
+        )
+
+        # Get Embeddings
         embeddings = ef.extract_feature(
-            data_root = directory,
+            data_root = directory + "_align",
             backbone = self.backbone,
             model_root = "D:/Python/face.evoLVe.PyTorch/data/checkpoint/backbone_ir50_ms1m_epoch120.pth",
             input_size = [112, 112], 
