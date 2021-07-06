@@ -18,8 +18,13 @@ from facematcher import Matching
 
 class FaceTracker(object):
     def __init__(self):
+        self.dummy_id = 1e3
+
         self.dot_bank = []
+
         self.color_map = {}
+        self.color_map[self.dummy_id] = (0, 0, 255)
+
     
     # Drawing people's paths
     def randomColorGenerator(self):
@@ -93,7 +98,7 @@ class FaceTracker(object):
         for frame_num in range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT))):
             ret, frame = cap.read()
 
-            if frame_num>0:
+            if frame_num>20:
                 continue
 
             if ret:
@@ -130,15 +135,24 @@ class FaceTracker(object):
                 '''
 
                 # Primitive On the Spot
-                id_list = scores = None
+                id_mp = None
                 
                 if numFacesDetected > 0:
-                    id_list, scores = matching.updateBatch_directNewcentric(
+                    id_mp = matching.updateBatch_directNewcentric(
                         face_array = face_array,
                         frame_num = frame_num,
-                        thresh = 0.75, # For Matching
+                        thresh = 0.7, # For Matching
                     )
                     
+                    # Fill First with Dummy Ids
+                    id_list = np.full(shape = (numFacesDetected), fill_value = self.dummy_id, dtype = np.int16)
+
+                    # Correct faces with matched ids
+                    for i, id in id_mp.items():
+                        assert(id != self.dummy_id)
+                        id_list[i] = id
+                    
+                    # Assign Colors
                     boxColors = []
                     for i, id in enumerate(id_list):
                         boxColors.append(self.getColor(id))
@@ -150,8 +164,16 @@ class FaceTracker(object):
 
                         self.dot_bank.append((center, boxColors[i]))
 
-                    drawframe.notate(img=frame, boxes = boxes, boxColors = boxColors, faceids = id_list, 
-                    thickness = scaled_thickness, fontScale = scaled_box_fontScale, fontColor = adjusted_fontColor)
+                    drawframe.notate(
+                        img=frame, 
+                        boxes = boxes,
+                        boxColors = boxColors,
+                        faceids = id_list,
+                        thickness = scaled_thickness,
+                        fontScale = scaled_box_fontScale,
+                        fontColor = adjusted_fontColor,
+                        dummyId = self.dummy_id,
+                    )
 
                 drawframe.drawDots(img=frame, dot_bank = self.dot_bank)
 

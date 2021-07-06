@@ -123,9 +123,10 @@ class Matching(object):
         os.mkdir(directory + "_align/id1")
 
         #python face_align.py -source_root D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/0 -dest_root D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/0_align -crop_size 112
-        fa.face_align(
-            source_root = 'D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/0',
-            dest_root = 'D:/Python/face.evoLVe.PyTorch/data/FaceTrackerData/0_align',
+        print(directory)
+        foundLandmarks = fa.face_align(
+            source_root = directory,
+            dest_root = directory + '_align',
             crop_size = 112, # I'm not confident if this is correct tbh
         )
 
@@ -139,7 +140,12 @@ class Matching(object):
             device = 'cpu', 
         )
 
-        return embeddings
+        foundEmbeddings = {}
+        for i, embedding in zip(foundLandmarks, embeddings):
+            index = int(i[0:-4]) # Index in Face Array
+            foundEmbeddings[index] = embedding
+
+        return foundEmbeddings
     
     def match_score(self, known_embedding, new_embedding):
         '''known_embedding = normalize(known_embedding.reshape(1, -1))
@@ -147,7 +153,9 @@ class Matching(object):
         score = cosine(known_embedding, new_embedding)
         return score
 
+    '''
     def updateBatch(self, face_array, boxes, landmarks, frame_num, thresh = 0.75):
+        # Update-based, inferring between lapses in detection
         embeddings = self.get_embeddings(face_array, frame_num)
 
         N_new = len(face_array)
@@ -195,46 +203,49 @@ class Matching(object):
         for j in range(N_old):
             if matched_old[j] == -1:
                 self.prev_data[j].static_count += 1
+    '''
 
     def updateBatch_directNewcentric(self, face_array, frame_num, thresh = 0.5):
-        num_faces = len(face_array)
 
         embeddings = self.get_embeddings(face_array, frame_num)
 
-        id_list = []
-        scores = []
+        id_mp = {}
 
-        for embedding in embeddings:
-            # Create new list for scores of current embedding
-            scores.append([])
-
+        for cur_face, embedding in embeddings.items():
             # Get Best Pairing 
-            best_i = -1
-            best_score = 100
+            i_best = -1
+            score_best = 100
 
-            if len(self.prev_data) > 0:
-                for i, person in enumerate(self.prev_data):
-                    cur_score = self.match_score(person.recent_embedding, embedding)
-                    scores[-1].append(cur_score)
-                    
-                    if cur_score < best_score:
-                        best_score = cur_score
-                        best_i = i
+            for i, person in enumerate(self.prev_data):
+                if person.recent_frame_num == frame_num:
+                    continue
+                elif person.recent_frame_num > frame_num:
+                    print("FUTURE FACE FOUND IN PREV_DATA (facematcher.py)")
+
+                score_CurWithPrevI = self.match_score(person.recent_embedding, embedding)
+                
+                if score_CurWithPrevI < score_best:
+                    i_best = i
+                    score_best = score_CurWithPrevI
             
-            if best_score <= thresh:
-                id_list.append(best_i)
-                self.prev_data[best_i].recent_embedding = embedding
-                self.prev_data[best_i].recent_frame_num = frame_num
-                self.prev_data[best_i].static_count = 1
+            if score_best <= thresh: # If best similarity passes threshold
+                # Assign id to cur_face
+                id_mp[cur_face] = i_best
+                
+                # Update Bank of Previous Faces
+                self.prev_data[id_mp[cur_face]].recent_embedding = embedding
+                self.prev_data[id_mp[cur_face]].recent_frame_num = frame_num
+                self.prev_data[id_mp[cur_face]].static_count = 1
             else:
-                id_list.append(len(self.prev_data))
+                # Cur_face has not been seen before
+                id_mp[cur_face] = len(self.prev_data)
                 new_face = Face(
                     embedding = embedding,
                     box = None, 
                     landmarks = None,
                     frame_num = frame_num,
-                    id = len(self.prev_data),
+                    id = id_mp[cur_face], 
                 )
                 self.prev_data.append(new_face)
 
-        return [id_list, scores]
+        return id_mp

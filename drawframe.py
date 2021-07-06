@@ -22,21 +22,26 @@ def draw_land(img, landmarks, radius = 2, color = (255, 0, 0)):
                     color = color)
     return img
 
-def draw_id(img, faceids, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, color = (0, 241, 245)):
+def draw_id(img, faceids, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, color = (0, 241, 245), dummyId = 1e3):
     for idi, box in zip(faceids, boxes):
-        cv2.putText(img = img, text = str(idi), org = (box[2], box[1]), 
-                fontFace = fontFace, fontScale = fontScale, 
-                    color = color)
+        cv2.putText(
+            img = img,
+            text = str(-1) if dummyId == idi else str(idi),
+            org = (box[2], box[1]), 
+            fontFace = fontFace,
+            fontScale = fontScale, 
+            color = color
+        )
     return img
 
-def notate(img, boxes, boxColors = [], landmarks = None, probs = None, faceids = None, thickness = 2, fontScale = 0.3, fontColor = (0, 241, 245)):
+def notate(img, boxes, boxColors = [], landmarks = None, probs = None, faceids = None, thickness = 2, fontScale = 0.3, fontColor = (0, 241, 245), dummyId = 1e3):
     img = draw_boxes(img, boxes, boxColors = boxColors, thickness = thickness)
     if not landmarks is None:
         img = draw_land(img, landmarks)
     if not probs is None:
         img = draw_prob(img, probs, boxes, fontScale = fontScale, color = fontColor)
     if not faceids is None:
-        img = draw_id(img, faceids, boxes, fontScale = fontScale, color = fontColor)
+        img = draw_id(img, faceids, boxes, fontScale = fontScale, color = fontColor, dummyId = dummyId)
         
     return img
 
