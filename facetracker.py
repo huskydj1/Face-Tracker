@@ -98,8 +98,10 @@ class FaceTracker(object):
         for frame_num in range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT))):
             ret, frame = cap.read()
 
-            if frame_num>20:
+            '''
+            if frame_num!=79:
                 continue
+            '''
 
             if ret:
                 # Read Bounding Box Information
@@ -200,16 +202,16 @@ inputFileFolder = "sourceVideos"
 input_videos = {  
     "rainpedestrians" : "crowdedstreetundertherain-pexels",
     "bigcrowd" : "skywalkmahanakhon-videvo",
-}
-'''
-Inactive Videos:
-    
     "fourhallway" :  "walkinghallway-pexels",
     "panning" : "dogrunning",
     "oneman" : "oneman_face-demographics-walking-and-pause",
     "onewoman" : "onewoman_face-demographics-walking-and-pause",
     "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
     "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",  
+}
+'''
+Inactive Videos:
+    
 '''
 
 for input_short, input_name in input_videos.items():

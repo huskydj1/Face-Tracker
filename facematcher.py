@@ -130,6 +130,11 @@ class Matching(object):
             crop_size = 112, # I'm not confident if this is correct tbh
         )
 
+        print(foundLandmarks)
+
+        if len(foundLandmarks)==0:
+            return {}
+
         # Get Embeddings
         embeddings = ef.extract_feature(
             data_root = directory + "_align",

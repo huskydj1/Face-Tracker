@@ -3,5 +3,6 @@ outputTexts/
 outputVideos/
 sourceVideos/
 arcfaceData/
+VideosFrameByFrame/
 
 __pycache__/
