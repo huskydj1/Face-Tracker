@@ -18,7 +18,7 @@ def draw_prob(img, probs, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale =
 def draw_land(img, landmarks, radius = 2, color = (255, 0, 0)):
     for ld in landmarks:
         for land_x, land_y in ld:
-                cv2.circle(img = img, center=(land_x, land_y), radius = radius, 
+            cv2.circle(img = img, center=(int(land_x), int(land_y)), radius = radius, 
                     color = color)
     return img
 

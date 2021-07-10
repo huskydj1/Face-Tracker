@@ -42,8 +42,8 @@ class FaceTracker(object):
     def readBoxes(self, boxFile, manual_conf):
         num_faces = int(boxFile.readline().strip())
 
-        box_info = np.empty(shape = (num_faces, 5))
-        landmarks = np.empty(shape = (num_faces, 5, 2))
+        box_info = np.empty([num_faces, 5])
+        landmarks = np.empty((num_faces, 5, 2))
         for i in range(num_faces):
             box_info[i] = np.asarray(boxFile.readline().split())
             for j in range(5):
@@ -52,7 +52,7 @@ class FaceTracker(object):
         boxes = box_info[:, 0:4]
         boxes[:, 2] += boxes[:, 0]
         boxes[:, 3] += boxes[:, 1]
-        probs = box_info[:, 4]
+        probs = box_info[:, 4].round(decimals = 3)
 
         boxes = (boxes.round()).astype(np.int)
         landmarks = (landmarks.round().astype(np.int))
@@ -106,14 +106,6 @@ class FaceTracker(object):
             if ret:
                 # Read Bounding Box Information
                 boxes, probs, landmarks = self.readBoxes(boxFile, manual_conf)
-                
-                selective = np.zeros(shape = (len(boxes), ))
-                # selective[5] = selective[6] = selective[7] = selective[9] = 1
-                selective[:] = 1
-
-                boxes = boxes[selective==1]
-                probs = probs[selective==1]
-                landmarks = landmarks[selective==1]
 
                 # Cropped Faces
                 face_array = []
@@ -137,6 +129,17 @@ class FaceTracker(object):
                         for j in range(len(translatedLandmarks[i])):
                             for k in range(len(translatedLandmarks[i, j])):
                                 translatedLandmarks[i][j][k] = landmarks[i, j, k] - boxes[i, k]
+
+                    '''
+                    for i in range(len(face_array)):
+                        face = drawframe.draw_land(
+                            img = face_array[i], 
+                            landmarks = translatedLandmarks[i][np.newaxis, :, :],
+                        )
+                        cv2.imshow("Face{}".format(i), face)
+                        cv2.waitKey(0)
+                        cv2.destroyAllWindows()
+                    '''
 
                     id_mp = matching.updateBatch_direct(
                         face_array = face_array,
