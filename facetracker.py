@@ -39,8 +39,7 @@ class FaceTracker(object):
         return self.color_map[id]
 
     # Helper Function for Reading Boxes from File (Outputted by RetinaFace, run by Colab)
-    def readBoxes(self, boxFile, manual_conf):
-        num_faces = int(boxFile.readline().strip())
+    def readBoxes(self, boxFile, manual_conf, num_faces):
 
         box_info = np.empty(shape = (num_faces, 5))
         landmarks = np.empty(shape = (num_faces, 5, 2))
@@ -61,7 +60,7 @@ class FaceTracker(object):
         landmarks = landmarks[probs>=manual_conf]
         probs = probs[probs>=manual_conf]
         
-        return boxes, probs, landmarks
+        return boxes, probs, landmarks, len(boxes)
     
     def track(self, inputFileFolder, input_short, input_name, file_input_path, detector_name, manual_conf = 0.5, manual_match = 0.7):
         # Input:
@@ -97,23 +96,17 @@ class FaceTracker(object):
             boxFile = open(file_input_path + "/{}.txt".format(str(frame_num)), "r")
 
             # Get Video Info
-            filename = boxFile.readline().strip()
+            assert(frame_num==int(boxFile.readline().strip()))
+            num_faces = int(boxFile.readline().strip())
 
-            
-            if frame_num>1: 
+            '''
+            if frame_num>10: 
                 continue
+            '''
 
             if ret:
                 # Read Bounding Box Information
-                boxes, probs, landmarks = self.readBoxes(boxFile, manual_conf)
-                
-                selective = np.zeros(shape = (len(boxes), ))
-                # selective[5] = selective[6] = selective[7] = selective[9] = 1
-                selective[:] = 1
-
-                boxes = boxes[selective==1]
-                probs = probs[selective==1]
-                landmarks = landmarks[selective==1]
+                boxes, probs, landmarks, num_faces = self.readBoxes(boxFile, manual_conf, num_faces)
 
                 # Cropped Faces
                 face_array = []
@@ -125,18 +118,20 @@ class FaceTracker(object):
                         ymax = max(ymax, 0)
                         face_array.append(frame[ymin:ymax, xmin:xmax, :])
 
-                numFacesDetected = 0 if face_array is None else len(face_array)
+                print("FRAME: {num1} FACES DETECTED: {num2}".format(
+                    num1 = frame_num,
+                    num2 = num_faces,
+                ))
 
                 # Primitive On the Spot
-                id_mp = None
                 
-                if numFacesDetected > 0:
-                    translatedLandmarks = np.empty(landmarks.shape)
+                if num_faces > 0:
+                    translatedLandmarks = np.zeros(shape = landmarks.shape)
                     
                     for i in range(len(translatedLandmarks)):
                         for j in range(len(translatedLandmarks[i])):
                             for k in range(len(translatedLandmarks[i, j])):
-                                translatedLandmarks[i][j][k] = landmarks[i, j, k] - boxes[i, k]
+                                translatedLandmarks[i, j, k] = landmarks[i, j, k] - boxes[i, k]
 
                     id_mp = matching.updateBatch_direct(
                         face_array = face_array,
@@ -146,7 +141,7 @@ class FaceTracker(object):
                     )
                     
                     # Fill First with Dummy Ids
-                    id_list = np.full(shape = (numFacesDetected), fill_value = self.dummy_id, dtype = np.int16)
+                    id_list = np.full(shape = (num_faces), fill_value = self.dummy_id, dtype = np.int16)
 
                     # Correct faces with matched ids
                     for i, id in id_mp.items():
@@ -179,11 +174,11 @@ class FaceTracker(object):
 
                 drawframe.drawDots(img=frame, dot_bank = self.dot_bank)
 
-                if numFacesDetected != last_update_cnt:
+                if num_faces != last_update_cnt:
                     last_update_frame = frame_num
-                    last_update_cnt = numFacesDetected
+                    last_update_cnt = num_faces
 
-                frame_info = "FRAME #: " + str(frame_num) + " Faces Detected: " + str(numFacesDetected) + " Last Update On: " + str(last_update_frame)
+                frame_info = "FRAME #: " + str(frame_num) + " Faces Detected: " + str(num_faces) + " Last Update On: " + str(last_update_frame)
                 cv2.putText(frame, frame_info, (scaled_title_offset, scaled_title_offset), cv2.FONT_HERSHEY_DUPLEX, scaled_title_fontScale, (0, 0, 0))
                 out.write(frame)
             else:
@@ -228,8 +223,8 @@ Inactive Videos:
     "onewoman" : "onewoman_face-demographics-walking-and-pause",
     "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
 '''
-for manual_conf in [0.99]: #
-    for manual_match in [0.75]: #[0.65, 0.75, 0.85]
+for manual_conf in [0.85, 0.90, 0.99]: 
+    for manual_match in [0.6, 0.65, 0.7, 0.75]:
         for input_short, input_name in input_videos.items():
             trackVideo = FaceTracker()
             print(input_short, input_name)

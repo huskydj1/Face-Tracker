@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(1, 'D:/Python/face.evoLVe.PyTorch/')
 
-from backbone import model_irse as mi
+from backbone.model_irse import Backbone
 from util import extract_feature_v1 as ef
 
 from applications.align import face_align_import as fa
@@ -41,7 +41,6 @@ class Face(object):
 class Matching(object):
     def __init__(self):  
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        self.backbone = mi.Backbone([112, 112], 50, 'ir')
         self.prev_data = []
 
         #Reset Data Folder
@@ -96,16 +95,23 @@ class Matching(object):
         )
 
         # Get Embeddings
-        print(directory + "_align")
-        embeddings = ef.extract_feature(
+        # print(directory + "_align")
+        feature_mp = ef.extract_feature(
             data_root = directory + "_align",
-            backbone = self.backbone,
+            backbone = Backbone(input_size = [112, 112], num_layers = 50),
             model_root = "D:/Python/face.evoLVe.PyTorch/data/checkpoint/backbone_ir50_ms1m_epoch120.pth",
             input_size = [112, 112], 
             batch_size = 1,
             device = 'cpu', 
-        )
+            tta = False, # Maybe not, dunno yet
+        ) # Map of features (img_path, feature embedding shape = (512, ))
 
+        embeddings = []
+        for i in range(len(face_array)):
+            path_i = directory + "_align\\id1\\" + str(i) + ".jpg"
+            # print(i, path_i)
+            embeddings.append(feature_mp[path_i])
+        
         return embeddings
     
     def match_score(self, x, y):
@@ -116,31 +122,39 @@ class Matching(object):
         return 1 - score
 
     def updateBatch_direct(self, face_array, landmark_array, frame_num, thresh = 0.5):
+        np.set_printoptions(precision=3)
+        np.set_printoptions(suppress=True)
 
         new_embeddings = self.get_embeddings(face_array, landmark_array, frame_num)
-
+        
         num_new = len(new_embeddings)
         num_old = len(self.prev_data)
+
+        '''
+        if frame_num == 1:
+            for new_i in range(num_new): 
+                print(new_i, new_embeddings[new_i])
+            for old_i in range(num_old):
+                print(old_i, self.prev_data[old_i].recent_embedding)
+        '''
         
         # Initialize here  so that we can use it if numOld==0
         new_used = np.zeros(shape = (num_new,))
         old_used = np.zeros(shape = (num_old,))
         id_mp = {}
 
-        print(num_new, num_old)
+        # print(num_new, num_old)
 
         if num_old > 0:
 
             # Goal of all of this is to find the cos_similarity between all pairs of new and old faces
             
             cos_similarity = np.zeros(shape = (num_new, num_old))
-            for new_i in range(num_new):
-                for old_i in range(num_old):
-                    cos_similarity[new_i, old_i] = self.match_score(new_embeddings[new_i], self.prev_data[old_i].recent_embedding)
-            np.set_printoptions(precision=3)
-            np.set_printoptions(suppress=True)
+            for new_i in range(0, num_new):
+                for old_i in range(0, num_old):
+                    cos_similarity[new_i, old_i] = self.match_score(x = new_embeddings[new_i], y = self.prev_data[old_i].recent_embedding)
 
-            print(cos_similarity)
+            # print(cos_similarity)
 
             score_list = []
             for new_i in range(num_new):
@@ -152,7 +166,7 @@ class Matching(object):
             score_list = np.sort(score_list, order = 'dist')
             score_list = score_list[::-1]
             
-            print(score_list)
+            # print(score_list)
 
             # Match
 
@@ -186,7 +200,7 @@ class Matching(object):
                 )
                 self.prev_data.append(new_face)
 
-        print(id_mp)
+        # print(id_mp)
 
         return id_mp
 
