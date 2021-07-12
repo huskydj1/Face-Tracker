@@ -159,9 +159,9 @@ class Matching(object):
             score_list = []
             for new_i in range(num_new):
                 for old_i in range(num_old):
-                    #if cos_similarity[new_i, old_i] > thresh:
-                    #    score_list.append((new_i, old_i, cos_similarity[new_i, old_i]))
-                    score_list.append((new_i, old_i, cos_similarity[new_i, old_i]))
+                    if cos_similarity[new_i, old_i] > thresh:
+                        score_list.append((new_i, old_i, cos_similarity[new_i, old_i]))
+                    # score_list.append((new_i, old_i, cos_similarity[new_i, old_i]))
             score_list = np.array(score_list, dtype = [('new_i', int), ('old_i', int), ('dist', np.float64)])
             score_list = np.sort(score_list, order = 'dist')
             score_list = score_list[::-1]

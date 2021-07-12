@@ -99,10 +99,10 @@ class FaceTracker(object):
             assert(frame_num==int(boxFile.readline().strip()))
             num_faces = int(boxFile.readline().strip())
 
-            '''
-            if frame_num>10: 
-                continue
-            '''
+            
+            #if frame_num%500!=0: 
+            #    continue
+            
 
             if ret:
                 # Read Bounding Box Information
@@ -196,24 +196,24 @@ class FaceTracker(object):
 inputFileFolder = "sourceVideos"
 input_videos = {  
     "bigcrowd" : "skywalkmahanakhon-videvo",
+    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",  
+    "rainpedestrians" : "crowdedstreetundertherain-pexels",
+    "fourhallway" :  "walkinghallway-pexels",
 }
 '''
 Up Next:
 
-    "fourhallway" :  "walkinghallway-pexels",
-    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",  
-    "rainpedestrians" : "crowdedstreetundertherain-pexels",
 '''
 
 input_videos_file = {
     "bigcrowd" : "D:/Python/Face Tracker/outputTexts/6--bigcrowd",
+    "rainpedestrians" : "D:/Python/Face Tracker/outputTexts/7--rainpedestrians",
+    "onemantwowoman" : "D:/Python/Face Tracker/outputTexts/0--onemantwowoman/",
+    "fourhallway" :  "D:/Python/Face Tracker/outputTexts/5--fourhallway/",
 }
 '''
 Up Next:
 
-    "fourhallway" :  "D:/Python/Face Tracker/outputTexts/5--fourhallway/",
-    "rainpedestrians" : "D:/Python/Face Tracker/outputTexts/7--rainpedestrians",
-    "onemantwowoman" : "D:/Python/Face Tracker/outputTexts/0--onemantwowoman/",
 '''
 
 '''
@@ -222,9 +222,11 @@ Inactive Videos:
     "oneman" : "oneman_face-demographics-walking-and-pause",
     "onewoman" : "onewoman_face-demographics-walking-and-pause",
     "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
+
+
 '''
-for manual_conf in [0.85, 0.90, 0.99]: 
-    for manual_match in [0.6, 0.65, 0.7, 0.75]:
+for manual_conf in [0.95]: #0.85, 0.90,  0.99
+    for manual_match in [0.5]: #0.6,0.7, 0.75
         for input_short, input_name in input_videos.items():
             trackVideo = FaceTracker()
             print(input_short, input_name)

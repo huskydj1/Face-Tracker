@@ -45,6 +45,7 @@ def generateWiderValTxt():
     #Open TXT Output
     out = open("D:/Python/Face Tracker/wider_val.txt", "w")
 
+    '''
     for i in range(478):
         out.write("/0--onemantwowoman/{}.jpg".format(str(i)) + '\n')
     for i in range(391):
@@ -53,19 +54,27 @@ def generateWiderValTxt():
         out.write("/6--bigcrowd/{}.jpg".format(str(i)) + '\n')
     for i in range(821):
         out.write("/7--rainpedestrians/{}.jpg".format(str(i)) + '\n')
+    '''
+
+    for i in range(1525):
+        out.write("/8--voccamp/{}.jpg".format(str(i)) + '\n')
     
     out.close()
 
 
 inputFileFolder = "sourceVideos"
 input_videos = {  
+    "voccamp" : "voccamp",
+}
+'''
+Inactive Videos:
+    Have been run before, used with up-to-date retinaface:
     "rainpedestrians" : "crowdedstreetundertherain-pexels",
     "bigcrowd" : "skywalkmahanakhon-videvo",
     "fourhallway" :  "walkinghallway-pexels",
     "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",  
-}
-'''
-Inactive Videos:
+
+    Have never been run yet:
     "panning" : "dogrunning",
     "oneman" : "oneman_face-demographics-walking-and-pause",
     "onewoman" : "onewoman_face-demographics-walking-and-pause",
@@ -78,7 +87,7 @@ for input_short, input_name in input_videos.items():
         input_short = input_short,
         input_name = input_name,
     )
-'''
 
+'''
 
 generateWiderValTxt()
