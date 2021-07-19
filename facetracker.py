@@ -7,6 +7,8 @@ sys.path.append("D:/Python/Face Tracker")
 import numpy as np  
 import time
 import cv2
+import random
+import colorsys
 
 # Necessary Repos
 
@@ -28,7 +30,9 @@ class FaceTracker(object):
     
     # Drawing people's paths
     def randomColorGenerator(self):
-        return list(np.random.random(size=3) * 256)
+        h,s,l = random.random(), 0.5 + random.random()/2.0, 0.4 + random.random()/5.0
+        return [int(256*i) for i in colorsys.hls_to_rgb(h,l,s)]
+        # return list(np.random.random(size=3) * 256)
     def getColor(self, id):
         if not(id in self.color_map.keys()):
             color = self.randomColorGenerator()
@@ -66,12 +70,13 @@ class FaceTracker(object):
         # Input:
         # Open MP4 Input
         cap = organizefiles.openInputVideo(inputFileFolder, input_name)
+        fps_original =  cap.get(cv2.CAP_PROP_FPS)
         
         # Output: 
         # Open MP4 Output
         output_long = detector_name + "_" + input_short + "_" + "C" + str(manual_conf) + "_ " + "M" + str(manual_match) + "_" + "v"
         out = organizefiles.openOutputVideo(folder = "outputInterpretedVideos/"  + detector_name, name = ("OUT_" + output_long), 
-            fps = 8, frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)));
+            fps = fps_original//3, frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)));
 
         # Get Frame Info 
         inputVideo_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -99,10 +104,8 @@ class FaceTracker(object):
             assert(frame_num==int(boxFile.readline().strip()))
             num_faces = int(boxFile.readline().strip())
 
-            
-            #if frame_num%500!=0: 
+            #if not(1032<=frame_num and frame_num<=1054):
             #    continue
-            
 
             if ret:
                 # Read Bounding Box Information
@@ -136,6 +139,7 @@ class FaceTracker(object):
                     id_mp = matching.updateBatch_direct(
                         face_array = face_array,
                         landmark_array = translatedLandmarks,
+                        actuallandmark_array = landmarks,
                         frame_num = frame_num,
                         thresh = manual_match, # For Matching
                     )
@@ -167,7 +171,7 @@ class FaceTracker(object):
                         landmarks = landmarks,
                         faceids = id_list,
                         thickness = scaled_thickness,
-                        fontScale = scaled_box_fontScale,
+                        fontScale = scaled_box_fontScale + 0.5,
                         fontColor = adjusted_fontColor,
                         dummyId = self.dummy_id,
                     )
@@ -179,7 +183,17 @@ class FaceTracker(object):
                     last_update_cnt = num_faces
 
                 frame_info = "FRAME #: " + str(frame_num) + " Faces Detected: " + str(num_faces) + " Last Update On: " + str(last_update_frame)
-                cv2.putText(frame, frame_info, (scaled_title_offset, scaled_title_offset), cv2.FONT_HERSHEY_DUPLEX, scaled_title_fontScale, (0, 0, 0))
+                cv2.putText(
+                    img = frame, 
+                    text = frame_info, 
+                    org = (scaled_title_offset, scaled_title_offset), 
+                    fontFace = cv2.FONT_HERSHEY_DUPLEX, 
+                    fontScale = scaled_title_fontScale, 
+                    color = (255, 255, 0),
+                    thickness = 2, 
+                    lineType = cv2.LINE_AA,
+                )
+                
                 out.write(frame)
             else:
                 break
@@ -195,26 +209,24 @@ class FaceTracker(object):
 
 inputFileFolder = "sourceVideos"
 input_videos = {  
-    "bigcrowd" : "skywalkmahanakhon-videvo",
-    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",  
-    "rainpedestrians" : "crowdedstreetundertherain-pexels",
-    "fourhallway" :  "walkinghallway-pexels",
+    "voccamp" : "voccamp",
 }
 '''
 Up Next:
 
+    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",  
+    "bigcrowd" : "skywalkmahanakhon-videvo",
+    "rainpedestrians" : "crowdedstreetundertherain-pexels",
+    "fourhallway" :  "walkinghallway-pexels",
 '''
 
 input_videos_file = {
+    "voccamp" : "D:/Python/Face Tracker/outputTexts/8--voccamp",
+    "onemantwowoman" : "D:/Python/Face Tracker/outputTexts/0--onemantwowoman/",
     "bigcrowd" : "D:/Python/Face Tracker/outputTexts/6--bigcrowd",
     "rainpedestrians" : "D:/Python/Face Tracker/outputTexts/7--rainpedestrians",
-    "onemantwowoman" : "D:/Python/Face Tracker/outputTexts/0--onemantwowoman/",
     "fourhallway" :  "D:/Python/Face Tracker/outputTexts/5--fourhallway/",
 }
-'''
-Up Next:
-
-'''
 
 '''
 Inactive Videos:
@@ -223,10 +235,12 @@ Inactive Videos:
     "onewoman" : "onewoman_face-demographics-walking-and-pause",
     "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
 
-
+# Sweet spot seems to be 0.8, 0.4
 '''
-for manual_conf in [0.95]: #0.85, 0.90,  0.99
-    for manual_match in [0.5]: #0.6,0.7, 0.75
+
+
+for manual_conf in [0.3]: #0.85, 0.90,  0.99
+    for manual_match in [0]: #0.6,0.7, 0.75
         for input_short, input_name in input_videos.items():
             trackVideo = FaceTracker()
             print(input_short, input_name)
@@ -239,3 +253,4 @@ for manual_conf in [0.95]: #0.85, 0.90,  0.99
                 manual_conf = manual_conf,
                 manual_match = manual_match,
             )
+

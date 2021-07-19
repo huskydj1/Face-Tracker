@@ -10,6 +10,7 @@ from scipy import spatial
 import os
 
 from PIL import Image
+import math
 import cv2
 import torch
 import numpy as np
@@ -20,8 +21,9 @@ from sklearn.preprocessing import normalize
 import drawframe
 
 class Face(object):
-    def __init__(self, embedding, img, frame_num, id):
+    def __init__(self, embedding, landmarks, img, frame_num, id):
         self.recent_embedding = embedding
+        self.recent_landmarks = landmarks
         self.recent_img = img
         self.recent_frame_num = frame_num
 
@@ -121,7 +123,12 @@ class Matching(object):
         score = cosine(u = x, v = y)
         return 1 - score
 
-    def updateBatch_direct(self, face_array, landmark_array, frame_num, thresh = 0.5):
+    def landmarkDist(self, landmarks_a, landmarks_b):
+        avg_a = np.mean(a = landmarks_a, axis = 0)
+        avg_b = np.mean(a = landmarks_b, axis = 0)
+        return np.linalg.norm(avg_a - avg_b) 
+
+    def updateBatch_direct(self, face_array, landmark_array, actuallandmark_array, frame_num, thresh = 0.5):
         np.set_printoptions(precision=3)
         np.set_printoptions(suppress=True)
 
@@ -171,6 +178,11 @@ class Matching(object):
             # Match
 
             for new_i, old_i, dist in score_list:
+                #TODO: ADDED FOR VOC USE, CONSIDER DELETING OR REFINING FOR REAL RUNS
+                # print(new_i, old_i, self.landmarkDist(landmarks_a = actuallandmark_array[new_i], landmarks_b = self.prev_data[old_i].recent_landmarks))
+                if self.landmarkDist(landmarks_a = actuallandmark_array[new_i], landmarks_b = self.prev_data[old_i].recent_landmarks) > 50:
+                    continue
+
                 if new_used[new_i] == 1:
                     continue
                 elif old_used[old_i] == 1:
@@ -181,6 +193,7 @@ class Matching(object):
                     
                     # Update Bank of Previous Faces
                     self.prev_data[old_i].recent_embedding = new_embeddings[new_i]
+                    self.prev_data[old_i].recent_landmarks = actuallandmark_array[new_i]
                     self.prev_data[old_i].recent_img = face_array[new_i]
                     self.prev_data[old_i].recent_frame_num = frame_num
                     self.prev_data[old_i].static_count = 1
@@ -194,6 +207,7 @@ class Matching(object):
                 id_mp[new_i] = len(self.prev_data)
                 new_face = Face(
                     embedding = new_embeddings[new_i],
+                    landmarks = actuallandmark_array[new_i],
                     img = face_array[new_i],
                     frame_num = frame_num,
                     id = id_mp[new_i], 

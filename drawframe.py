@@ -4,33 +4,61 @@ import numpy as np
 
 def draw_boxes(img, boxes, boxColors = [], thickness = 2):
     for i, box in enumerate(boxes):
-            cv2.rectangle(img = img, pt1 = (box[0], box[1]), pt2 = (box[2], box[3]), 
-                color = (0, 0, 255) if boxColors is None else boxColors[i], thickness = thickness)
+            cv2.rectangle(
+                img = img, 
+                pt1 = (box[0], box[1]), 
+                pt2 = (box[2], box[3]), 
+                color = (0, 0, 255) if boxColors is None else boxColors[i], 
+                thickness = thickness,
+                lineType = cv2.LINE_AA,
+            )
     return img
 
 def draw_prob(img, probs, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, color = (240, 125, 2)):
     for prob, box in zip(probs, boxes):
         cv2.putText(img = img, text = str(prob), org = (box[2], box[3]), 
                 fontFace = fontFace, fontScale = fontScale, 
-                    color = color)
+                    color = color, lineType = cv2.LINE_AA,)
     return img
 
-def draw_land(img, landmarks, radius = 2, color = (255, 0, 0)):
+def draw_land(img, landmarks, radius = 4, color = (0, 0, 255)):
     for ld in landmarks:
+        avg_x = avg_y = 0
         for land_x, land_y in ld:
-            cv2.circle(img = img, center=(int(land_x), int(land_y)), radius = radius, 
+            avg_x += land_x
+            avg_y += land_y
+            cv2.circle(
+                img = img,
+                center=(int(land_x), int(land_y)),
+                radius = radius, 
+                color = color,
+                thickness = 2,
+                lineType = cv2.LINE_AA,
+            )
+        avg_x /= len(ld)
+        avg_y /= len(ld)
+        '''
+        cv2.circle(img = img, center=(int(avg_x), int(avg_y)), radius = 50, 
                     color = color)
+
+        cv2.circle(img = img, center=(int(avg_x) + 50, int(avg_y)), radius = radius, 
+                    color = color)
+        '''
+
+        
     return img
 
 def draw_id(img, faceids, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, color = (0, 241, 245), dummyId = 1e3):
     for idi, box in zip(faceids, boxes):
+        num = str(-1) if dummyId == idi else str(idi)
         cv2.putText(
             img = img,
-            text = str(-1) if dummyId == idi else str(idi),
+            text = "ID: {}".format(num),
             org = (box[2], box[1]), 
             fontFace = fontFace,
             fontScale = fontScale, 
-            color = color
+            color = color,
+            lineType = cv2.LINE_AA,
         )
     return img
 
