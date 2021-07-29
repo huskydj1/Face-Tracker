@@ -104,7 +104,7 @@ class FaceTracker(object):
             assert(frame_num==int(boxFile.readline().strip()))
             num_faces = int(boxFile.readline().strip())
 
-            #if not(1032<=frame_num and frame_num<=1054):
+            #if not(320<=frame_num and frame_num<=370):
             #    continue
 
             if ret:
@@ -140,6 +140,7 @@ class FaceTracker(object):
                         face_array = face_array,
                         landmark_array = translatedLandmarks,
                         actuallandmark_array = landmarks,
+                        box_array = boxes,
                         frame_num = frame_num,
                         thresh = manual_match, # For Matching
                     )
@@ -208,16 +209,16 @@ class FaceTracker(object):
         out.release()
 
 inputFileFolder = "sourceVideos"
-input_videos = {  
-    "voccamp" : "voccamp",
+input_videos = {   
+    "bigcrowd" : "skywalkmahanakhon-videvo",
+    "fourhallway" :  "walkinghallway-pexels",
+    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause", 
 }
 '''
 Up Next:
 
-    "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause",  
-    "bigcrowd" : "skywalkmahanakhon-videvo",
+    "voccamp" : "voccamp",
     "rainpedestrians" : "crowdedstreetundertherain-pexels",
-    "fourhallway" :  "walkinghallway-pexels",
 '''
 
 input_videos_file = {
@@ -235,12 +236,26 @@ Inactive Videos:
     "onewoman" : "onewoman_face-demographics-walking-and-pause",
     "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
 
-# Sweet spot seems to be 0.8, 0.4
 '''
 
+manual_conf = 0.95
+manual_match = 0.5
+input_short, input_name = "onemantwowoman" , "onemantwowomen_face-demographics-walking-and-pause"
+trackVideo = FaceTracker()
+print(input_short, input_name)
+trackVideo.track(
+    inputFileFolder = inputFileFolder, 
+    input_short = input_short,
+    input_name = input_name,
+    file_input_path = input_videos_file[input_short],
+    detector_name = "RetinaFace",
+    manual_conf = manual_conf,
+    manual_match = manual_match,
+)
 
-for manual_conf in [0.3]: #0.85, 0.90,  0.99
-    for manual_match in [0]: #0.6,0.7, 0.75
+'''
+for manual_conf in [0.7, 0.8, 0.9, 0.95]: #
+    for manual_match in [0.2, 0.3, 0.4, 0.5]: #
         for input_short, input_name in input_videos.items():
             trackVideo = FaceTracker()
             print(input_short, input_name)
@@ -253,4 +268,5 @@ for manual_conf in [0.3]: #0.85, 0.90,  0.99
                 manual_conf = manual_conf,
                 manual_match = manual_match,
             )
+'''
 
