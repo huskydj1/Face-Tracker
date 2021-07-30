@@ -22,6 +22,7 @@ def draw_prob(img, probs, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale =
     return img
 
 def draw_land(img, landmarks, radius = 4, color = (0, 0, 255)):
+    '''
     for ld in landmarks:
         avg_x = avg_y = 0
         for land_x, land_y in ld:
@@ -37,15 +38,24 @@ def draw_land(img, landmarks, radius = 4, color = (0, 0, 255)):
             )
         avg_x /= len(ld)
         avg_y /= len(ld)
-        '''
-        cv2.circle(img = img, center=(int(avg_x), int(avg_y)), radius = 50, 
-                    color = color)
+        #cv2.circle(img = img, center=(int(avg_x), int(avg_y)), radius = 50, 
+        #            color = color)
 
-        cv2.circle(img = img, center=(int(avg_x) + 50, int(avg_y)), radius = radius, 
-                    color = color)
-        '''
-
-        
+        #cv2.circle(img = img, center=(int(avg_x) + 50, int(avg_y)), radius = radius, 
+        #            color = color)
+    '''
+    
+    for ld in landmarks:
+        for land_x, land_y in ld[0:2]:
+            cv2.circle(
+                img = img,
+                center=(int(land_x), int(land_y)),
+                radius = radius, 
+                color = color,
+                thickness = 2,
+                lineType = cv2.LINE_AA,
+            )
+    
     return img
 
 def draw_id(img, faceids, boxes, fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale = 0.3, color = (0, 241, 245), dummyId = 1e3):

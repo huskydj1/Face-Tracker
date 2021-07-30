@@ -1,4 +1,3 @@
-
 # Working directory: "Face Tracker" (not needed for colab)
 import sys
 sys.path.append("D:/Python/Face Tracker")
@@ -9,6 +8,7 @@ import time
 import cv2
 import random
 import colorsys
+import re
 
 # Necessary Repos
 
@@ -17,6 +17,7 @@ import drawframe
 import organizefiles
 
 from facematcher import Matching
+
 
 class FaceTracker(object):
     def __init__(self):
@@ -94,6 +95,8 @@ class FaceTracker(object):
         last_update_cnt = -1
         last_update_frame = -1
 
+        # Gaze Estimation Infastructure
+
         for frame_num in range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT))):
             ret, frame = cap.read()
 
@@ -104,7 +107,7 @@ class FaceTracker(object):
             assert(frame_num==int(boxFile.readline().strip()))
             num_faces = int(boxFile.readline().strip())
 
-            #if not(320<=frame_num and frame_num<=370):
+            #if not(0<=frame_num and frame_num<=10):
             #    continue
 
             if ret:
@@ -129,6 +132,7 @@ class FaceTracker(object):
                 # Primitive On the Spot
                 
                 if num_faces > 0:
+
                     translatedLandmarks = np.zeros(shape = landmarks.shape)
                     
                     for i in range(len(translatedLandmarks)):
@@ -152,7 +156,20 @@ class FaceTracker(object):
                     for i, id in id_mp.items():
                         assert(id != self.dummy_id)
                         id_list[i] = id
-                    
+
+                    # EXPORT RESULTS
+                    tracking_id_frame = open("D:/Python/Face Tracker/exportTrackingResults/{}/{}.txt".format(input_short, frame_num), "w")
+                    tracking_id_frame.write(str(len(id_list)) + '\n')
+                    for i, id in enumerate(id_list):
+                        assert(id != self.dummy_id)
+                        tracking_id_frame.write(str(id) + '\n')
+                        tracking_id_frame.write(re.sub("[^0-9^.^ ^-]", "", str(boxes[i])) + '\n')
+                        tracking_id_frame.write(str((landmarks[i, 0, 0] + landmarks[i, 1, 0])/2) + " " + str((landmarks[i, 0, 1] + landmarks[i, 1, 1])/2) + '\n')
+                    tracking_id_frame.close()
+                    print(type(boxes[0][0]))
+
+                    # PERFORM GAZE DETECTION FOR EACH FACE
+
                     # Assign Colors
                     boxColors = []
                     for i, id in enumerate(id_list):
@@ -176,6 +193,11 @@ class FaceTracker(object):
                         fontColor = adjusted_fontColor,
                         dummyId = self.dummy_id,
                     )
+                else:
+                    # EXPORT "NO FACES" IN FILE
+                    tracking_id_frame = open("D:/Python/Face Tracker/exportTrackingResults/{}/{}.txt".format(input_short, frame_num), "w")
+                    tracking_id_frame.write("0\n")
+                    tracking_id_frame.close()
 
                 drawframe.drawDots(img=frame, dot_bank = self.dot_bank)
 
@@ -237,6 +259,8 @@ Inactive Videos:
     "onemanonewoman" : "onemanonewoman_face-demographics-walking-and-pause",
 
 '''
+
+
 
 
 for manual_conf in [0.95]: #

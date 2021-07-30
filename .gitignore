@@ -4,5 +4,6 @@ outputVideos/
 sourceVideos/
 arcfaceData/
 VideosFrameByFrame/
+exportTrackingResults/
 
 __pycache__/
