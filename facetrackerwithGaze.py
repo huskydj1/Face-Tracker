@@ -80,6 +80,7 @@ class FaceTracker(object):
             fps = fps_original//3, frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)));
 
         # Get Frame Info 
+        inputVideo_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         inputVideo_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
         # Scale Attributes
@@ -114,14 +115,28 @@ class FaceTracker(object):
                 # Read Bounding Box Information
                 boxes, probs, landmarks, num_faces = self.readBoxes(boxFile, manual_conf, num_faces)
 
+                # Enlarge boxes
+                for i in range(len(boxes)):
+                    xmin, ymin, xmax, ymax = boxes[i]
+                    w = xmax - xmin
+                    h = ymax - ymin
+
+                    boxes[i, 0] = xmin - 0.15*w
+                    boxes[i, 1] = ymin - 0.15*h
+                    boxes[i, 2] = xmax + 0.15*w
+                    boxes[i, 3] = ymax + 0.15*h
+
+                    for j in range(0, 4):
+                        boxes[i, j] = max(boxes[i, j], 0)
+                        if j%2==0:
+                            boxes[i, j] = min(boxes[i, j], inputVideo_width)
+                        else:
+                            boxes[i, j] = min(boxes[i, j], inputVideo_height)
+
                 # Cropped Faces
                 face_array = []
                 if len(boxes) > 0:
                     for xmin, ymin, xmax, ymax in boxes:
-                        xmin = max(xmin, 0)
-                        ymin = max(ymin, 0)
-                        xmax = max(xmax, 0)
-                        ymax = max(ymax, 0)
                         face_array.append(frame[ymin:ymax, xmin:xmax, :])
 
                 print("FRAME: {num1} FACES DETECTED: {num2}".format(
@@ -233,14 +248,13 @@ class FaceTracker(object):
 inputFileFolder = "sourceVideos"
 input_videos = {   
     "fourhallway" :  "walkinghallway-pexels",
+    "bigcrowd" : "skywalkmahanakhon-videvo",
+    "rainpedestrians" : "crowdedstreetundertherain-pexels",
 }
 '''
 Up Next:
-
-    "bigcrowd" : "skywalkmahanakhon-videvo",
     "onemantwowoman" : "onemantwowomen_face-demographics-walking-and-pause", 
     "voccamp" : "voccamp",
-    "rainpedestrians" : "crowdedstreetundertherain-pexels",
 '''
 
 input_videos_file = {
